@@ -29,5 +29,7 @@ func New(ctx context.Context, dsn string) (*Storage, error) {
 
 func (s Storage) Locks(ctx context.Context, limit uint, offset uint) ([]models.DoorLock, error) {
 	const fn = "internal.storage.postgres.Locks"
+	_ = `SELECT `
 
+	return nil, nil
 }

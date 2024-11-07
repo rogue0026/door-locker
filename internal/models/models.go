@@ -16,7 +16,8 @@ type DoorLock struct {
 	Size                 string   `json:"size"`
 	Weight               int      `json:"weight"`
 	DoorType             []string `json:"door_type"`
-	DoorThickness        int      `json:"door_thickness"`
+	DoorThicknessMin     int      `json:"door_thickness_min"`
+	DoorThicknessMax     int      `json:"door_thickness_max"`
 	Rating               float32  `json:"rating"`
 	Quantity             int      `json:"quantity"`
 }
