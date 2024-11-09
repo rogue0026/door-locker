@@ -2,16 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/rogue0026/door-locker/internal/application"
 	"github.com/rogue0026/door-locker/internal/config"
-	"github.com/sirupsen/logrus"
-	"io"
-	"os"
-)
-
-const (
-	envDev  string = "dev"
-	envProd string = "prod"
 )
 
 var (
@@ -22,39 +15,11 @@ func main() {
 	flag.StringVar(&cfgPath, "cfg", "", "path to application config")
 	flag.Parse()
 
-	appLogger := setupLogger(envDev, os.Stdout)
-	appLogger.Debugf("logger initialized")
-	appConfig := config.MustLoad(cfgPath)
-
-	application.Run(appConfig, appLogger)
-}
-
-func setupLogger(env string, logsOut io.Writer) *logrus.Logger {
-	var logger *logrus.Logger
-	switch env {
-	case envDev:
-		logger = &logrus.Logger{
-			Out: logsOut,
-			Formatter: &logrus.JSONFormatter{
-				TimestampFormat: "02.01.2006 15:04:05",
-				PrettyPrint:     true,
-			},
-			ReportCaller: true,
-			Level:        logrus.DebugLevel,
-		}
-	case envProd:
-		logger = &logrus.Logger{
-			Out: logsOut,
-			Formatter: &logrus.JSONFormatter{
-				TimestampFormat: "02.01.2006 15:04:05",
-				PrettyPrint:     false,
-			},
-			ReportCaller: true,
-			Level:        logrus.InfoLevel,
-		}
+	appCfg := config.MustLoad(cfgPath)
+	app := application.New(appCfg)
+	address := fmt.Sprintf("%s:%d", appCfg.Host, appCfg.Port)
+	err := app.Run(address)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
-	if logger == nil {
-		panic("logger not initialized")
-	}
-	return logger
 }
