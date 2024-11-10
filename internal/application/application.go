@@ -48,6 +48,7 @@ func (a *BackendApplication) Run(addr string) error {
 
 	appRouter := chi.NewRouter()
 	appRouter.Method(http.MethodGet, "/api/door-locks", handlers.DoorLockByLimitOffsetHandler(a.AppLogger, a.AppStorage))
+	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLockHandler(a.AppLogger, a.AppStorage))
 
 	server := http.Server{
 		Handler: appRouter,

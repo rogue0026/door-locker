@@ -24,6 +24,7 @@ SELECT * FROM lock_materials;
 CREATE TABLE door_locks (
                             part_number VARCHAR(30) PRIMARY KEY,
                             title VARCHAR(100) NOT NULL,
+                            image SMALLINT[] NOT NULL,
                             price REAL NOT NULL,
                             sale_price REAL NOT NULL,
                             equipment VARCHAR(256) NOT NULL,
@@ -44,7 +45,25 @@ CREATE TABLE door_locks (
 );
 
 INSERT INTO door_locks
-(part_number, title, price, sale_price, equipment, color_id, description, category_id, card_memory, material_id, has_mobile_application, power_supply, size, weight, door_types_id, door_thickness_min, door_thickness_max, rating, quantity)
+    (part_number,
+     title,
+     price,
+     sale_price,
+     equipment,
+     color_id,
+     description,
+     category_id,
+     card_memory,
+     material_id,
+     has_mobile_application,
+     power_supply,
+     size,
+     weight,
+     door_types_id,
+     door_thickness_min,
+     door_thickness_max,
+     rating,
+     quantity)
 VALUES
     ('DL-0001', 'Smart Lock A1', 200.99, 180.99, 'Fingerprint, Keypad', 1, 'A modern smart lock with mobile app access.', 1, 200, 2, TRUE, '4 AA Batteries', '80x60x40 mm', 500, ARRAY[1,2], 35, 50, 4.7, 100),
     ('DL-0002', 'Biometric Lock B2', 250.50, 230.00, 'Card, Fingerprint', 2, 'High-security biometric lock.', 2, 300, 3, FALSE, 'Rechargeable Battery', '85x65x45 mm', 550, ARRAY[1,3], 30, 45, 4.8, 75),
