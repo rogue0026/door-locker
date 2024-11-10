@@ -81,6 +81,10 @@ func (s Storage) Ping(ctx context.Context) error {
 	return s.connPool.Ping(ctx)
 }
 
+func (s Storage) Close(ctx context.Context) {
+	s.connPool.Close()
+}
+
 func (s Storage) SaveLock(ctx context.Context, lock models.DoorLock) error {
 	const fn = "internal.storage.postgres.SaveLock"
 	query := `
