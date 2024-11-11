@@ -7,6 +7,7 @@ import (
 	"github.com/rogue0026/door-locker/internal/config"
 	"github.com/rogue0026/door-locker/internal/storage/postgres"
 	"github.com/rogue0026/door-locker/internal/transport/http/handlers"
+	"github.com/rogue0026/door-locker/internal/transport/http/middleware"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -28,7 +29,9 @@ type BackendApplication struct {
 func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication {
 	appLogger := setupLogger(envDev, os.Stdout)
 
+	loggingMw := middleware.LoggingMiddleware(appLogger)
 	appRouter := chi.NewRouter()
+	appRouter.Use(loggingMw)
 	appRouter.Method(http.MethodGet, "/api/door-locks", handlers.DoorLockByLimitOffsetHandler(appLogger, appStorage))
 	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLockHandler(appLogger, appStorage))
 
@@ -68,7 +71,7 @@ func setupLogger(env string, logsOut io.Writer) *logrus.Logger {
 				TimestampFormat: "02.01.2006 15:04:05",
 				FullTimestamp:   true,
 			},
-			ReportCaller: true,
+			ReportCaller: false,
 			Level:        logrus.DebugLevel,
 		}
 	case envProd:
