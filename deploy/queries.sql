@@ -2,21 +2,26 @@ CREATE TABLE lock_colors(
                             id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                             name VARCHAR(30) NOT NULL
 );
+
 INSERT INTO lock_colors (name) VALUES ('Черный'), ('Золотой'),('Серебристный'),('Серый'), ('Коричневый');
+
 CREATE TABLE lock_categories(
                                 id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                 name VARCHAR(30) NOT NULL
 );
+
 INSERT INTO lock_categories(name) VALUES ('Для дома'), ('Для квартиры'), ('Для гаража'), ('Для сарая'), ('Для машины'), ('Для Маги');
 CREATE TABLE lock_materials(
                                id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                name VARCHAR(30) NOT NULL
 );
+
 INSERT INTO lock_materials(name) VALUES ('Металл'), ('Пластик'), ('Металл/пластик'), ('Дерево'), ('Жопа дракона'), ('Карбон');
+
 CREATE TABLE door_locks (
                             part_number VARCHAR(30) PRIMARY KEY,
                             title VARCHAR(100) NOT NULL,
-                            image SMALLINT[] NOT NULL,
+                            image SMALLINT[],
                             price REAL NOT NULL,
                             sale_price REAL NOT NULL,
                             equipment VARCHAR(256) NOT NULL,
@@ -35,8 +40,10 @@ CREATE TABLE door_locks (
                             rating REAL NOT NULL,
                             quantity INTEGER NOT NULL
 );
+
 INSERT INTO door_locks
     (part_number,
+
      title,
      price,
      sale_price,
@@ -130,7 +137,8 @@ BEGIN
         LIMIT records_per_page
             OFFSET rows_to_skip;
 END;
-$$
+$$;
+
 create procedure save_door_lock(IN part_number character varying, IN title character varying, IN price real, IN sale_price real, IN equipment character varying, IN color_id integer, IN description character varying, IN category_id integer, IN card_memory integer, IN material_id integer, IN has_mobile_application boolean, IN power_supply character varying, IN size character varying, IN weight integer, IN door_types_id integer[], IN door_thickness_min integer, IN door_thickness_max integer, IN rating real, IN quantity integer)
     language plpgsql
 as
@@ -189,4 +197,4 @@ begin
     from door_locks
     where part_number = partnumber;
 end;
-$$
+$$;
