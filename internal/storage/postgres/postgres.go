@@ -86,47 +86,26 @@ func (s Storage) Close() {
 func (s Storage) SaveLock(ctx context.Context, lock models.DoorLock) error {
 	const fn = "internal.storage.postgres.SaveLock"
 	query := `
-INSERT INTO door_locks
-    (part_number,
-     title,
-     price,
-     sale_price,
-     equipment,
-     color_id,
-     description,
-     category_id,
-     card_memory,
-     material_id,
-     has_mobile_application,
-     power_supply,
-     size,
-     weight,
-     door_types_id,
-     door_thickness_min,
-     door_thickness_max,
-     rating,
-     quantity)
-VALUES(
-	@part_number,
-    @title,
-    @price,
-    @sale_price,
-    @equipment,
-    @color_id,
-    @description,
-    @category_id,
-    @card_memory,
-    @material_id,
-    @has_mobile_application,
-    @power_supply,
-    @size,
-    @weight,
-    @door_types_id,
-    @door_thickness_min,
-    @door_thickness_max,
-    @rating,
-    @quantity)
-RETURNING part_number;`
+call save_door_lock(
+@part_number,
+@title,
+@price,
+@sale_price,
+@equipment,
+@color_id,
+@description,
+@category_id,
+@card_memory,
+@material_id,
+@has_mobile_application,
+@power_supply,
+@size,
+@weight,
+@door_types_id,
+@door_thickness_min,
+@door_thickness_max,
+@rating,
+@quantity);`
 
 	args := pgx.NamedArgs{
 		"part_number":            lock.PartNumber,

@@ -2,25 +2,17 @@ CREATE TABLE lock_colors(
                             id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                             name VARCHAR(30) NOT NULL
 );
-
 INSERT INTO lock_colors (name) VALUES ('Черный'), ('Золотой'),('Серебристный'),('Серый'), ('Коричневый');
-SELECT * FROM lock_colors;
-
 CREATE TABLE lock_categories(
                                 id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                 name VARCHAR(30) NOT NULL
 );
 INSERT INTO lock_categories(name) VALUES ('Для дома'), ('Для квартиры'), ('Для гаража'), ('Для сарая'), ('Для машины'), ('Для Маги');
-SELECT * FROM lock_categories;
-
 CREATE TABLE lock_materials(
                                id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                name VARCHAR(30) NOT NULL
 );
-
 INSERT INTO lock_materials(name) VALUES ('Металл'), ('Пластик'), ('Металл/пластик'), ('Дерево'), ('Жопа дракона'), ('Карбон');
-SELECT * FROM lock_materials;
-
 CREATE TABLE door_locks (
                             part_number VARCHAR(30) PRIMARY KEY,
                             title VARCHAR(100) NOT NULL,
@@ -43,7 +35,6 @@ CREATE TABLE door_locks (
                             rating REAL NOT NULL,
                             quantity INTEGER NOT NULL
 );
-
 INSERT INTO door_locks
     (part_number,
      title,
@@ -85,9 +76,6 @@ VALUES
     ('DL-0018', 'Electronic Lock S1', 230.00, 210.00, 'Fingerprint, Remote', 3, 'Electronic lock with fingerprint option.', 2, 300, 2, TRUE, '4 AA Batteries', '84x64x44 mm', 510, ARRAY[1,2], 30, 48, 4.6, 65),
     ('DL-0019', 'Advanced Biometric T6', 300.99, 280.99, 'Fingerprint, Keypad', 4, 'Advanced biometric lock with keypad.', 1, 400, 4, TRUE, 'Rechargeable Battery', '92x72x52 mm', 600, ARRAY[1,3], 36, 54, 4.9, 40),
     ('DL-0020', 'Compact Lock U2', 125.00, 115.00, 'Key only', 3, 'Compact lock for residential doors.', 4, 0, 1, FALSE, 'No Power Required', '65x55x35 mm', 420, ARRAY[2,4], 28, 38, 4.2, 110);
-
-
-
 
 CREATE FUNCTION fn_locks_limit_offset(page_number INT, records_per_page INT)
     RETURNS TABLE(
@@ -143,3 +131,50 @@ BEGIN
             OFFSET rows_to_skip;
 END;
 $$
+create procedure save_door_lock(IN part_number character varying, IN title character varying, IN price real, IN sale_price real, IN equipment character varying, IN color_id integer, IN description character varying, IN category_id integer, IN card_memory integer, IN material_id integer, IN has_mobile_application boolean, IN power_supply character varying, IN size character varying, IN weight integer, IN door_types_id integer[], IN door_thickness_min integer, IN door_thickness_max integer, IN rating real, IN quantity integer)
+    language plpgsql
+as
+$$
+begin
+    insert into door_locks(
+        part_number,
+        title,
+        price,
+        sale_price,
+        equipment,
+        color_id,
+        description,
+        category_id,
+        card_memory,
+        material_id,
+        has_mobile_application,
+        power_supply,
+        size,
+        weight,
+        door_types_id,
+        door_thickness_min,
+        door_thickness_max,
+        rating,
+        quantity)
+    values (
+               part_number,
+               title,
+               price,
+               sale_price,
+               equipment,
+               color_id,
+               description,
+               category_id,
+               card_memory,
+               material_id,
+               has_mobile_application,
+               power_supply,
+               size,
+               weight,
+               door_types_id,
+               door_thickness_min,
+               door_thickness_max,
+               rating,
+               quantity);
+end;
+$$;
