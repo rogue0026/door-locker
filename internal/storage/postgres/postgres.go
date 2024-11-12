@@ -30,16 +30,14 @@ func New(ctx context.Context, dsn string) (Storage, error) {
 	return s, nil
 }
 
-func (s Storage) LocksWithLimitOffset(ctx context.Context, recordsOnPage int64, pageNumber int64) ([]models.DoorLock, error) {
-	const fn = "internal.storage.postgres.Locks"
-	query := `SELECT * FROM door_locks ORDER BY part_number OFFSET $1 LIMIT $2`
-	var offset = (pageNumber - 1) * recordsOnPage
-	rows, err := s.connPool.Query(ctx, query, offset, recordsOnPage)
+func (s Storage) LocksWithLimitOffset(ctx context.Context, pageNumber int64, recordsOnPage int64) ([]models.DoorLock, error) {
+	const fn = "internal.storage.postgres.LocksWithLimitOffset"
+	query := `SELECT * from fn_locks_limit_offset($1, $2)`
+	rows, err := s.connPool.Query(ctx, query, pageNumber, recordsOnPage)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("%s: %w", fn, storage.ErrRecordsNotFound)
 		}
-		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	defer rows.Close()
 	recordsFromDB := make([]models.DoorLock, 0, recordsOnPage)
@@ -81,7 +79,7 @@ func (s Storage) Ping(ctx context.Context) error {
 	return s.connPool.Ping(ctx)
 }
 
-func (s Storage) Close(ctx context.Context) {
+func (s Storage) Close() {
 	s.connPool.Close()
 }
 

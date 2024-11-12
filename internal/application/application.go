@@ -71,7 +71,7 @@ func setupLogger(env string, logsOut io.Writer) *logrus.Logger {
 				TimestampFormat: "02.01.2006 15:04:05",
 				FullTimestamp:   true,
 			},
-			ReportCaller: false,
+			ReportCaller: true,
 			Level:        logrus.DebugLevel,
 		}
 	case envProd:

@@ -16,6 +16,7 @@ import (
 func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
 	const fn = "internal.transport.http.handlers.GetDoorLockByLimitOffset"
 	h := func(w http.ResponseWriter, r *http.Request) {
+
 		pageQuery := r.URL.Query().Get("page")
 		pageNumber, err := strconv.ParseInt(pageQuery, 10, 64)
 		if err != nil || pageNumber <= 0 {
@@ -23,6 +24,7 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 			_, _ = w.Write([]byte("page number must be greater than zero"))
 			return
 		}
+
 		recordsQuery := r.URL.Query().Get("records")
 		recordsOnPage, err := strconv.ParseInt(recordsQuery, 10, 64)
 		if err != nil || (recordsOnPage != 10 && recordsOnPage != 20 && recordsOnPage != 50 && recordsOnPage != 5) {
@@ -30,7 +32,7 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 			_, _ = w.Write([]byte("records on page value must be 10, 20 or 50"))
 			return
 		}
-		records, err := locksStorage.LocksWithLimitOffset(r.Context(), recordsOnPage, pageNumber)
+		records, err := locksStorage.LocksWithLimitOffset(r.Context(), pageNumber, recordsOnPage)
 		if err != nil {
 			if errors.Is(err, storage.ErrRecordsNotFound) {
 				w.WriteHeader(http.StatusNotFound)

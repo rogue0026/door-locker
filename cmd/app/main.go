@@ -53,7 +53,7 @@ func main() {
 			fmt.Printf("error occured while shutdown http server: %s", err.Error())
 		}
 		fmt.Println("closing database connection")
-		app.AppStorage.Close(context.Background())
+		app.AppStorage.Close()
 		fmt.Println("database connection closed")
 	}()
 	wg.Wait()
