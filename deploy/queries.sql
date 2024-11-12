@@ -178,3 +178,15 @@ begin
                quantity);
 end;
 $$;
+
+
+create procedure delete_door_lock_by_partnumber(partnumber varchar(30))
+    language plpgsql
+as
+$$
+begin
+    delete
+    from door_locks
+    where part_number = partnumber;
+end;
+$$

@@ -34,6 +34,7 @@ func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication 
 	appRouter.Use(loggingMw)
 	appRouter.Method(http.MethodGet, "/api/door-locks", handlers.DoorLockByLimitOffsetHandler(appLogger, appStorage))
 	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLockHandler(appLogger, appStorage))
+	appRouter.Method(http.MethodDelete, "/api/door-locks", handlers.DeleteDoorLockHandler(appLogger, appStorage))
 
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	server := &http.Server{

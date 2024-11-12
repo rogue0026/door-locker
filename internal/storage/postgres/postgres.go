@@ -134,3 +134,16 @@ call save_door_lock(
 	}
 	return nil
 }
+
+func (s Storage) DeleteLockByPartNumber(ctx context.Context, partNumber string) error {
+	const fn = "internal.storage.postgres.DeleteLockByPartNumber"
+	query := `call delete_door_lock_by_partnumber(@partnumber)`
+	args := pgx.NamedArgs{
+		"partnumber": partNumber,
+	}
+	_, err := s.connPool.Exec(ctx, query, args)
+	if err != nil {
+		return fmt.Errorf("%s: %w", fn, err)
+	}
+	return nil
+}
