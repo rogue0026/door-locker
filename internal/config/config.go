@@ -6,9 +6,12 @@ import (
 )
 
 type AppConfig struct {
-	Host string `yaml:"host"`
-	Port uint16 `yaml:"port"`
-	DSN  string `yaml:"dsn"`
+	MigrationPath  string `yaml:"migration_path"`
+	MigrationDSN   string `yaml:"migration_dsn"`
+	AppEnvironment string `yaml:"app_environment"`
+	Host           string `yaml:"host"`
+	Port           uint16 `yaml:"port"`
+	DSN            string `yaml:"dsn"`
 }
 
 func MustLoad(configPath string) AppConfig {

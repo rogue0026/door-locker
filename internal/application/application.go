@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	envDev  string = "dev"
-	envProd string = "prod"
+	envDev  string = "development"
+	envProd string = "production"
 )
 
 type BackendApplication struct {
@@ -27,7 +27,7 @@ type BackendApplication struct {
 }
 
 func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication {
-	appLogger := setupLogger(envDev, os.Stdout)
+	appLogger := setupLogger(cfg.AppEnvironment, os.Stdout)
 
 	loggingMw := middleware.LoggingMiddleware(appLogger)
 	appRouter := chi.NewRouter()

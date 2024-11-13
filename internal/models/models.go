@@ -3,6 +3,7 @@ package models
 type DoorLock struct {
 	PartNumber           string  `json:"part_number"`
 	Title                string  `json:"title"`
+	Image                []byte  `json:"image"`
 	Price                float32 `json:"price"`
 	SalePrice            float32 `json:"sale_price"`
 	Equipment            string  `json:"equipment"`

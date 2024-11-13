@@ -43,7 +43,6 @@ CREATE TABLE door_locks (
 
 INSERT INTO door_locks
     (part_number,
-
      title,
      price,
      sale_price,
@@ -88,6 +87,7 @@ CREATE FUNCTION fn_locks_limit_offset(page_number INT, records_per_page INT)
     RETURNS TABLE(
                      part_number VARCHAR(30),
                      title VARCHAR(100),
+                     image SMALLINT[],
                      price REAL,
                      sale_price REAL,
                      equipment VARCHAR(256),
@@ -116,6 +116,7 @@ BEGIN
         SELECT
             door_locks.part_number,
             door_locks.title,
+            door_locks.image,
             door_locks.price,
             door_locks.sale_price,
             door_locks.equipment,
@@ -147,6 +148,7 @@ begin
     insert into door_locks(
         part_number,
         title,
+        --image,
         price,
         sale_price,
         equipment,
@@ -167,6 +169,7 @@ begin
     values (
                part_number,
                title,
+               --image,
                price,
                sale_price,
                equipment,
