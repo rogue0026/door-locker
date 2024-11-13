@@ -33,7 +33,7 @@ BEGIN
         SELECT
             door_locks.part_number,
             door_locks.title,
-            --door_locks.image,
+            door_locks.image,
             door_locks.price,
             door_locks.sale_price,
             door_locks.equipment,
@@ -57,7 +57,7 @@ BEGIN
 END;
 $$;
 
-create procedure save_door_lock(IN part_number character varying, IN title character varying, IN price real, IN sale_price real, IN equipment character varying, IN color_id integer, IN description character varying, IN category_id integer, IN card_memory integer, IN material_id integer, IN has_mobile_application boolean, IN power_supply character varying, IN size character varying, IN weight integer, IN door_types_id integer[], IN door_thickness_min integer, IN door_thickness_max integer, IN rating real, IN quantity integer)
+create procedure save_door_lock(IN part_number character varying, IN title character varying, IN image smallint[], IN price real, IN sale_price real, IN equipment character varying, IN color_id integer, IN description character varying, IN category_id integer, IN card_memory integer, IN material_id integer, IN has_mobile_application boolean, IN power_supply character varying, IN size character varying, IN weight integer, IN door_types_id integer[], IN door_thickness_min integer, IN door_thickness_max integer, IN rating real, IN quantity integer)
     language plpgsql
 as
 $$
@@ -65,7 +65,7 @@ begin
     insert into door_locks(
         part_number,
         title,
-        --image,
+        image,
         price,
         sale_price,
         equipment,
@@ -86,7 +86,7 @@ begin
     values (
                part_number,
                title,
-               --image,
+               image,
                price,
                sale_price,
                equipment,

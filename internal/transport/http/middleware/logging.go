@@ -6,17 +6,47 @@ import (
 	"time"
 )
 
+type responseData struct {
+	size   int
+	status int
+}
+
+type Wrapper struct {
+	http.ResponseWriter
+	rd *responseData
+}
+
+func (w *Wrapper) Write(p []byte) (int, error) {
+	sz, err := w.ResponseWriter.Write(p)
+	w.rd.size += sz
+	return sz, err
+}
+
+func (w *Wrapper) WriteHeader(statusCode int) {
+	w.ResponseWriter.WriteHeader(statusCode)
+	w.rd.status = statusCode
+}
+
 func LoggingMiddleware(logger *logrus.Logger) func(next http.Handler) http.Handler {
 	const fn = "internal.transport.http.middleware"
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// format: method url remote_address duration
 			start := time.Now()
 			method := r.Method
 			resource := r.URL.String()
 			remoteAddr := r.RemoteAddr
-			next.ServeHTTP(w, r)
-			logger.Infof("[%v] %v, remote_addr=%v, duration=%s", method, resource, remoteAddr, time.Since(start).String())
+			wrapper := Wrapper{
+				ResponseWriter: w,
+				rd:             new(responseData),
+			}
+			next.ServeHTTP(&wrapper, r)
+			logger.Infof("[%v] %v, status_code=%v, remote_addr=%v, duration=%s, size=%v bytes",
+				method,
+				resource,
+				wrapper.rd.status,
+				remoteAddr,
+				time.Since(start).String(),
+				wrapper.rd.size)
 		})
 	}
 }

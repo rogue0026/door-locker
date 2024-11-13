@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS lock_materials(
 CREATE TABLE IF NOT EXISTS door_locks (
                             part_number VARCHAR(30) PRIMARY KEY,
                             title VARCHAR(100) NOT NULL,
-                            image SMALLINT[],
+                            image SMALLINT[] NOT NULL DEFAULT '{1,0,1,0,1,0,1,0,1}',
                             price REAL NOT NULL,
                             sale_price REAL NOT NULL,
                             equipment VARCHAR(256) NOT NULL,

@@ -14,9 +14,8 @@ import (
 )
 
 func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
-	const fn = "internal.transport.http.handlers.GetDoorLockByLimitOffset"
+	const fn = "internal.transport.http.handlers.DoorLockByLimitOffsetHandler"
 	h := func(w http.ResponseWriter, r *http.Request) {
-
 		pageQuery := r.URL.Query().Get("page")
 		pageNumber, err := strconv.ParseInt(pageQuery, 10, 64)
 		if err != nil || pageNumber <= 0 {
@@ -40,7 +39,7 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 			} else {
 				logger.Error(err.Error())
 				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte("internal server error occured"))
+				_, _ = w.Write([]byte("internal server error occurred"))
 			}
 			return
 		}
@@ -60,7 +59,7 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 func AddDoorLockHandler(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
 	const fn = "internal.transport.http.handlers.AddDoorLockHandler"
 	h := func(w http.ResponseWriter, r *http.Request) {
-		in, err := io.ReadAll(r.Body)
+		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				w.WriteHeader(http.StatusBadRequest)
@@ -71,7 +70,7 @@ func AddDoorLockHandler(logger *logrus.Logger, locksStorage *postgres.Storage) h
 			return
 		}
 		record := models.DoorLock{}
-		err = json.Unmarshal(in, &record)
+		err = json.Unmarshal(reqBody, &record)
 		if err != nil {
 			logger.Errorf("%s: %s", fn, err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
@@ -100,7 +99,6 @@ func DeleteDoorLockHandler(logger *logrus.Logger, locksStorage *postgres.Storage
 	type DeleteRequest struct {
 		PartNumber string `json:"part_number"`
 	}
-
 	h := func(w http.ResponseWriter, r *http.Request) {
 		delReq := DeleteRequest{}
 		err := json.NewDecoder(r.Body).Decode(&delReq)

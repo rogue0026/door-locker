@@ -46,6 +46,7 @@ func (s Storage) LocksWithLimitOffset(ctx context.Context, pageNumber int64, rec
 		err = rows.Scan(
 			&scannedRow.PartNumber,
 			&scannedRow.Title,
+			&scannedRow.Image,
 			&scannedRow.Price,
 			&scannedRow.SalePrice,
 			&scannedRow.Equipment,
@@ -89,6 +90,7 @@ func (s Storage) SaveLock(ctx context.Context, lock models.DoorLock) error {
 call save_door_lock(
 @part_number,
 @title,
+@image,
 @price,
 @sale_price,
 @equipment,
@@ -110,6 +112,7 @@ call save_door_lock(
 	args := pgx.NamedArgs{
 		"part_number":            lock.PartNumber,
 		"title":                  lock.Title,
+		"image":                  lock.Image,
 		"price":                  lock.Price,
 		"sale_price":             lock.SalePrice,
 		"equipment":              lock.Equipment,
