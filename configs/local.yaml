@@ -1,6 +1,0 @@
-migration_path: file://migrations
-migration_dsn: pgx5://paul:password@localhost:5432/door_locker
-app_environment: development
-host: localhost
-port: 9090
-dsn: postgres://paul:password@localhost:5432/door_locker

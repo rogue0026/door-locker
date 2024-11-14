@@ -3,27 +3,22 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
-	"github.com/rogue0026/door-locker/internal/application"
-	"github.com/rogue0026/door-locker/internal/config"
-	"github.com/rogue0026/door-locker/internal/storage/postgres"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
-)
 
-var (
-	cfgPath string
+	"github.com/rogue0026/door-locker/internal/application"
+	"github.com/rogue0026/door-locker/internal/config"
+	"github.com/rogue0026/door-locker/internal/storage/postgres"
 )
 
 func main() {
-	flag.StringVar(&cfgPath, "cfg", "", "path to application config")
-	flag.Parse()
-
-	appCfg := config.MustLoad(cfgPath)
-	appStorage, err := postgres.New(context.Background(), appCfg.DSN)
+	appCfg := config.MustLoad()
+	// postgres://user:password@localhost:5432/db_name
+	DSN := fmt.Sprintf("postgres://%s:%s@%s/%s", appCfg.DBUser, appCfg.DBUserPassword, appCfg.DBHost, appCfg.DatabaseName)
+	appStorage, err := postgres.New(context.Background(), DSN)
 	if err != nil {
 		panic(err)
 	}

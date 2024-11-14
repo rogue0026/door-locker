@@ -2,27 +2,25 @@ package config
 
 import (
 	"github.com/ilyakaznacheev/cleanenv"
-	"os"
 )
 
 type AppConfig struct {
-	MigrationPath  string `yaml:"migration_path"`
-	MigrationDSN   string `yaml:"migration_dsn"`
-	AppEnvironment string `yaml:"app_environment"`
-	Host           string `yaml:"host"`
-	Port           uint16 `yaml:"port"`
-	DSN            string `yaml:"dsn"`
+	AppEnvironment string `env:"APP_ENVIRONMENT"`
+	LogLevel       string `env:"LOG_LEVEL"`
+	HTTPServerHost string `env:"HTTP_SERVER_HOST"`
+	HTTPServerPort uint   `env:"HTTP_SERVER_PORT"`
+	DBHost         string `env:"DB_HOST"`
+	DBPort         uint   `env:"DB_PORT"`
+	DBUser         string `env:"DB_USER"`
+	DBUserPassword string `env:"DB_USER_PASSWORD"`
+	DatabaseName   string `env:"DATABASE_NAME"`
 }
 
-func MustLoad(configPath string) AppConfig {
-	_, err := os.Lstat(configPath)
+func MustLoad() AppConfig {
+	appConfig := AppConfig{}
+	err := cleanenv.ReadEnv(&appConfig)
 	if err != nil {
 		panic(err)
 	}
-	cfg := AppConfig{}
-	err = cleanenv.ReadConfig(configPath, &cfg)
-	if err != nil {
-		panic(err)
-	}
-	return cfg
+	return appConfig
 }

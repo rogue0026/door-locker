@@ -3,24 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/rogue0026/door-locker/internal/config"
 )
 
 var (
-	appConfigPath string
+	migrationPath string = "file://migrations/"
+	connConfig    string = "pgx5://user:password@localhost:5432/door_locks"
 	direction     string
 )
 
 func main() {
-	flag.StringVar(&appConfigPath, "cfg", "", "path to application config file")
 	flag.StringVar(&direction, "direction", "", "migration direction: up or down")
 	flag.Parse()
 
-	appConfig := config.MustLoad(appConfigPath)
-	inst, err := migrate.New(appConfig.MigrationPath, appConfig.MigrationDSN)
+	inst, err := migrate.New(migrationPath, connConfig)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

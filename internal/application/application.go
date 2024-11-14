@@ -3,16 +3,17 @@ package application
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/rogue0026/door-locker/internal/config"
 	"github.com/rogue0026/door-locker/internal/storage/postgres"
 	"github.com/rogue0026/door-locker/internal/transport/http/handlers"
 	"github.com/rogue0026/door-locker/internal/transport/http/middleware"
 	"github.com/sirupsen/logrus"
-	"io"
-	"net/http"
-	"os"
-	"time"
 )
 
 const (
@@ -36,7 +37,7 @@ func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication 
 	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLockHandler(appLogger, appStorage))
 	appRouter.Method(http.MethodDelete, "/api/door-locks", handlers.DeleteDoorLockHandler(appLogger, appStorage))
 
-	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	addr := fmt.Sprintf("%s:%d", cfg.HTTPServerHost, cfg.HTTPServerPort)
 	server := &http.Server{
 		Handler: appRouter,
 		Addr:    addr,
