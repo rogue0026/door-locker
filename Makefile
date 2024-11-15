@@ -30,7 +30,7 @@ drop_test_database:
 .PHONY all:
 all:
 	docker network create application_network;
-	docker run -d --name door_locker_database --network=application_network -e POSTGRES_DB=door_locks -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 postgres;
+	docker run -d --name door_locker_database --rm --network=application_network -e POSTGRES_DB=door_locks -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 postgres;
 	echo "Ждем развертывания базы данных";
 	sleep 2;
 	echo "Собираем мигратор и накатываем миграции на базу данных";
@@ -39,4 +39,4 @@ all:
 	echo "Начинаем сборку образа backend-приложнения";
 	docker build -t backend:v0.0.1 .;
 	echo "Запускаем backend-приложение";
-	docker run --name backend_application --network application_network --env-file ./configs/.env -p 9090:9090 backend:v0.0.1;
+	docker run --name backend_application --rm --network application_network --env-file ./configs/.env -p 9090:9090 backend:v0.0.1;

@@ -150,3 +150,41 @@ func (s Storage) DeleteLockByPartNumber(ctx context.Context, partNumber string) 
 	}
 	return nil
 }
+
+func (s Storage) RegisterUserAccount(ctx context.Context, userAccount models.Account) error {
+	const fn = "internal.storage.postgres.RegisterUserAccount"
+	err := userAccount.EncryptPassword()
+	if err != nil {
+		return fmt.Errorf("%s: %w", fn, err)
+	}
+	args := pgx.NamedArgs{
+		"login":         userAccount.Login,
+		"password_hash": userAccount.PasswordHash,
+		"status":        userAccount.Status,
+		"first_name":    userAccount.FirstName,
+		"last_name":     userAccount.LastName,
+		"birth_date":    userAccount.BirthDate,
+		"phone_mobile":  userAccount.PhoneMobile,
+		"email":         userAccount.Email,
+	}
+	query := `call add_account(@login, @password_hash, @status, @first_name, @last_name, @birth_date, @phone_mobile, @email)`
+
+	_, err = s.connPool.Exec(ctx, query, args)
+	if err != nil {
+		return fmt.Errorf("%s: %w", fn, err)
+	}
+	return nil
+}
+
+func (s Storage) DeleteUserAccount(ctx context.Context, userID int64) error {
+	const fn = "internal.storage.postgres.DeleteUserAccount"
+	args := pgx.NamedArgs{
+		"user_id": userID,
+	}
+	query := `DELETE FROM accounts WHERE user_id = @user_id`
+	_, err := s.connPool.Exec(ctx, query, args)
+	if err != nil {
+		return fmt.Errorf("%s: %w", fn, err)
+	}
+	return nil
+}

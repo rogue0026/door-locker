@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
@@ -56,8 +57,8 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 	return http.HandlerFunc(h)
 }
 
-func AddDoorLockHandler(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
-	const fn = "internal.transport.http.handlers.AddDoorLockHandler"
+func AddDoorLock(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
+	const fn = "internal.transport.http.handlers.AddDoorLock"
 	h := func(w http.ResponseWriter, r *http.Request) {
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -94,8 +95,8 @@ func AddDoorLockHandler(logger *logrus.Logger, locksStorage *postgres.Storage) h
 	return http.HandlerFunc(h)
 }
 
-func DeleteDoorLockHandler(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
-	const fn = "internal.transport.http.handlers.DeleteDoorLockHandler"
+func DeleteDoorLock(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
+	const fn = "internal.transport.http.handlers.DeleteDoorLock"
 	type DeleteRequest struct {
 		PartNumber string `json:"part_number"`
 	}
@@ -118,4 +119,51 @@ func DeleteDoorLockHandler(logger *logrus.Logger, locksStorage *postgres.Storage
 		_, _ = w.Write(js)
 	}
 	return http.HandlerFunc(h)
+}
+
+func RegisterAccount(logger *logrus.Logger, storage *postgres.Storage) http.Handler {
+	const fn = "internal.transport.http.handlers.RegisterAccount"
+	f := func(w http.ResponseWriter, r *http.Request) {
+		userAccount := models.Account{}
+		err := json.NewDecoder(r.Body).Decode(&userAccount)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		parsedBirthDate, err := time.Parse("02.01.2006", userAccount.BirthDate)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		userAccount.BirthDate = parsedBirthDate.Format("2006-01-02")
+		err = storage.RegisterUserAccount(r.Context(), userAccount)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+	return http.HandlerFunc(f)
+}
+
+func DeleteAccount(logger *logrus.Logger, storage *postgres.Storage) http.Handler {
+	type DeleteRequest struct {
+		UserID int64 `json:"user_id"`
+	}
+	const fn = "internal.transport.http.handlers.DeleteAccount"
+	f := func(w http.ResponseWriter, r *http.Request) {
+		delRequest := DeleteRequest{}
+		err := json.NewDecoder(r.Body).Decode(&delRequest)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		err = storage.DeleteUserAccount(r.Context(), delRequest.UserID)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+	return http.HandlerFunc(f)
 }

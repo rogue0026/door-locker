@@ -40,7 +40,7 @@ func LoggingMiddleware(logger *logrus.Logger) func(next http.Handler) http.Handl
 				rd:             new(responseData),
 			}
 			next.ServeHTTP(&wrapper, r)
-			logger.Infof("[%v] %v, status_code=%v, remote_addr=%v, duration=%s, size=%v bytes",
+			logger.Infof("[%v] %v, status_code=%d, remote_addr=%s, duration=%s, size=%d bytes",
 				method,
 				resource,
 				wrapper.rd.status,

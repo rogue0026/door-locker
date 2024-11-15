@@ -33,9 +33,12 @@ func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication 
 	loggingMw := middleware.LoggingMiddleware(appLogger)
 	appRouter := chi.NewRouter()
 	appRouter.Use(loggingMw)
+
 	appRouter.Method(http.MethodGet, "/api/door-locks", handlers.DoorLockByLimitOffsetHandler(appLogger, appStorage))
-	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLockHandler(appLogger, appStorage))
-	appRouter.Method(http.MethodDelete, "/api/door-locks", handlers.DeleteDoorLockHandler(appLogger, appStorage))
+	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLock(appLogger, appStorage))
+	appRouter.Method(http.MethodDelete, "/api/door-locks", handlers.DeleteDoorLock(appLogger, appStorage))
+	appRouter.Method(http.MethodPost, "/api/accounts", handlers.RegisterAccount(appLogger, appStorage))
+	appRouter.Method(http.MethodDelete, "/api/accounts", handlers.DeleteAccount(appLogger, appStorage))
 
 	addr := fmt.Sprintf("%s:%d", cfg.HTTPServerHost, cfg.HTTPServerPort)
 	server := &http.Server{
@@ -43,7 +46,7 @@ func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication 
 		Addr:    addr,
 	}
 	a := BackendApplication{
-		AppLogger:  setupLogger(envDev, os.Stdout),
+		AppLogger:  setupLogger(cfg.AppEnvironment, os.Stdout),
 		AppStorage: appStorage,
 		HTTPServer: server,
 	}
@@ -63,9 +66,9 @@ func (a *BackendApplication) Run() error {
 	return a.HTTPServer.ListenAndServe()
 }
 
-func setupLogger(env string, logsOut io.Writer) *logrus.Logger {
+func setupLogger(appEnvironment string, logsOut io.Writer) *logrus.Logger {
 	var logger *logrus.Logger
-	switch env {
+	switch appEnvironment {
 	case envDev:
 		logger = &logrus.Logger{
 			Out: logsOut,
