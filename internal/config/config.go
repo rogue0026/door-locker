@@ -6,7 +6,6 @@ import (
 
 type AppConfig struct {
 	AppEnvironment string `env:"APP_ENVIRONMENT"`
-	LogLevel       string `env:"LOG_LEVEL"`
 	HTTPServerHost string `env:"HTTP_SERVER_HOST"`
 	HTTPServerPort uint   `env:"HTTP_SERVER_PORT"`
 	DBHost         string `env:"DB_HOST"`
