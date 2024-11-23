@@ -151,8 +151,8 @@ func (s Storage) DeleteLockByPartNumber(ctx context.Context, partNumber string) 
 	return nil
 }
 
-func (s Storage) RegisterUserAccount(ctx context.Context, userAccount models.Account) error {
-	const fn = "internal.storage.postgres.RegisterUserAccount"
+func (s Storage) CreateUserAccount(ctx context.Context, userAccount models.Account) error {
+	const fn = "internal.storage.postgres.CreateUserAccount"
 	err := userAccount.EncryptPassword()
 	if err != nil {
 		return fmt.Errorf("%s: %w", fn, err)

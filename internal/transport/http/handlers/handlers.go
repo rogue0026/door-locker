@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rogue0026/door-locker/internal/models"
-	"github.com/rogue0026/door-locker/internal/storage"
-	"github.com/rogue0026/door-locker/internal/storage/postgres"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/rogue0026/door-locker/internal/models"
+	"github.com/rogue0026/door-locker/internal/storage"
+	"github.com/rogue0026/door-locker/internal/storage/postgres"
+	"github.com/sirupsen/logrus"
 )
 
 func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
@@ -51,6 +52,7 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(jsonData)
 	}
@@ -136,7 +138,7 @@ func RegisterAccount(logger *logrus.Logger, storage *postgres.Storage) http.Hand
 			return
 		}
 		userAccount.BirthDate = parsedBirthDate.Format("2006-01-02")
-		err = storage.RegisterUserAccount(r.Context(), userAccount)
+		err = storage.CreateUserAccount(r.Context(), userAccount)
 		if err != nil {
 			logger.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
