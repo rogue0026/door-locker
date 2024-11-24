@@ -30,9 +30,9 @@ func New(ctx context.Context, dsn string) (Storage, error) {
 	return s, nil
 }
 
-func (s Storage) LocksWithLimitOffset(ctx context.Context, pageNumber int64, recordsOnPage int64) ([]models.DoorLock, error) {
-	const fn = "internal.storage.postgres.LocksWithLimitOffset"
-	query := `SELECT * from fn_locks_limit_offset($1, $2)`
+func (s Storage) LocksLimitOffset(ctx context.Context, pageNumber int64, recordsOnPage int64) ([]models.DoorLock, error) {
+	const fn = "internal.storage.postgres.LocksLimitOffset"
+	query := `SELECT * FROM fn_locks_limit_offset($1, $2)`
 	rows, err := s.connPool.Query(ctx, query, pageNumber, recordsOnPage)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -74,6 +74,81 @@ func (s Storage) LocksWithLimitOffset(ctx context.Context, pageNumber int64, rec
 		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	return recordsFromDB, nil
+}
+
+func (s Storage) LocksOrderedByRating(ctx context.Context, recordsOnPage int64) ([]models.DoorLock, error) {
+	const fn = "internal.storage.postgres.LocksOrderedByRating"
+	args := pgx.NamedArgs{
+		"records_on_page": recordsOnPage,
+	}
+	query := `SELECT * FROM fn_locks_ordered_by_rating(@records_on_page);`
+	rows, err := s.connPool.Query(ctx, query, args)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", fn, err)
+	}
+	defer rows.Close()
+	recordsFromDB := make([]models.DoorLock, 0, recordsOnPage)
+	for rows.Next() {
+		scannedRow := models.DoorLock{}
+		err = rows.Scan(
+			&scannedRow.PartNumber,
+			&scannedRow.Title,
+			&scannedRow.Image,
+			&scannedRow.Price,
+			&scannedRow.SalePrice,
+			&scannedRow.Equipment,
+			&scannedRow.ColorID,
+			&scannedRow.Description,
+			&scannedRow.CategoryID,
+			&scannedRow.CardMemory,
+			&scannedRow.MaterialID,
+			&scannedRow.HasMobileApplication,
+			&scannedRow.PowerSupply,
+			&scannedRow.Size,
+			&scannedRow.Weight,
+			&scannedRow.DoorsTypeID,
+			&scannedRow.DoorThicknessMin,
+			&scannedRow.DoorThicknessMax,
+			&scannedRow.Rating,
+			&scannedRow.Quantity)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", fn, err)
+		}
+		recordsFromDB = append(recordsFromDB, scannedRow)
+		err = rows.Err()
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", fn, err)
+		}
+	}
+	return recordsFromDB, nil
+}
+
+func (s Storage) LocksCategories(ctx context.Context) ([]models.Category, error) {
+	const fn = "internal.storage.postgres.LocksCategories"
+	query := `
+	SELECT
+	    id,
+		name, 
+		image
+    FROM lock_categories;`
+	rows, err := s.connPool.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", fn, err)
+	}
+	defer rows.Close()
+	records := make([]models.Category, 0)
+	for rows.Next() {
+		currentRecord := models.Category{}
+		err = rows.Scan(&currentRecord.ID, &currentRecord.Name, &currentRecord.Image)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", fn, err)
+		}
+		records = append(records, currentRecord)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", fn, err)
+	}
+	return records, nil
 }
 
 func (s Storage) Ping(ctx context.Context) error {

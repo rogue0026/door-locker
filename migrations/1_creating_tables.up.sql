@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS lock_colors(
 
 CREATE TABLE IF NOT EXISTS lock_categories(
                                 id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                                name VARCHAR(30) NOT NULL
+                                name VARCHAR(30) NOT NULL,
+                                image SMALLINT[] NOT NULL DEFAULT '{1,0,1,0,1,0,1,0,1}'
 );
 
 CREATE TABLE IF NOT EXISTS lock_materials(

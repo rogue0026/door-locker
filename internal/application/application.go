@@ -31,10 +31,13 @@ func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication 
 	appLogger := setupLogger(cfg.AppEnvironment, os.Stdout)
 
 	loggingMw := middleware.LoggingMiddleware(appLogger)
+
 	appRouter := chi.NewRouter()
-	appRouter.Use(loggingMw)
+	appRouter.Use(loggingMw, middleware.AccessControl)
 
 	appRouter.Method(http.MethodGet, "/api/door-locks", handlers.DoorLockByLimitOffsetHandler(appLogger, appStorage))
+	appRouter.Method(http.MethodGet, "/api/door-locks/popular", handlers.PopularDoorLocks(appLogger, appStorage))
+	appRouter.Method(http.MethodGet, "/api/door-locks/categories", handlers.DoorLocksCategories(appLogger, appStorage))
 	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLock(appLogger, appStorage))
 	appRouter.Method(http.MethodDelete, "/api/door-locks", handlers.DeleteDoorLock(appLogger, appStorage))
 	appRouter.Method(http.MethodPost, "/api/accounts", handlers.RegisterAccount(appLogger, appStorage))

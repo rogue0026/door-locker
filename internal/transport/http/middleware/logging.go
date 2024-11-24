@@ -28,7 +28,7 @@ func (w *Wrapper) WriteHeader(statusCode int) {
 }
 
 func LoggingMiddleware(logger *logrus.Logger) func(next http.Handler) http.Handler {
-	const fn = "internal.transport.http.middleware"
+	const fn = "internal.transport.http.LoggingMiddleware"
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()

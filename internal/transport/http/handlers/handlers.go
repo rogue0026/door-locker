@@ -33,7 +33,7 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 			_, _ = w.Write([]byte("records on page value must be 10, 20 or 50"))
 			return
 		}
-		records, err := locksStorage.LocksWithLimitOffset(r.Context(), pageNumber, recordsOnPage)
+		records, err := locksStorage.LocksLimitOffset(r.Context(), pageNumber, recordsOnPage)
 		if err != nil {
 			if errors.Is(err, storage.ErrRecordsNotFound) {
 				w.WriteHeader(http.StatusNotFound)
@@ -51,8 +51,56 @@ func DoorLockByLimitOffsetHandler(logger *logrus.Logger, locksStorage *postgres.
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(jsonData)
+	}
+	return http.HandlerFunc(h)
+}
+
+func PopularDoorLocks(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
+	// http:hostname:port/api/door-locks/popular?records=records_number
+	const fn = "internal.transport.http.handlers.PopularDoorLocks"
+	h := func(w http.ResponseWriter, r *http.Request) {
+		recordsQuery := r.URL.Query().Get("records")
+		numOfRecords, err := strconv.ParseInt(recordsQuery, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		records, err := locksStorage.LocksOrderedByRating(r.Context(), numOfRecords)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		jsonData, err := json.MarshalIndent(&records, "", "   ")
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(jsonData)
+	}
+	return http.HandlerFunc(h)
+}
+
+func DoorLocksCategories(logger *logrus.Logger, locksStorage *postgres.Storage) http.Handler {
+	// http://hostname:port/api/door-locks/categories
+	const fn = "internal.transport.http.handlers.DoorLocksCategories"
+	h := func(w http.ResponseWriter, r *http.Request) {
+		categories, err := locksStorage.LocksCategories(r.Context())
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		jsonData, err := json.MarshalIndent(&categories, "", "   ")
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(jsonData)
 	}
@@ -90,7 +138,6 @@ func AddDoorLock(logger *logrus.Logger, locksStorage *postgres.Storage) http.Han
 			logger.Errorf("%s: %s", fn, err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 		}
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_, _ = w.Write(js)
 	}

@@ -2,6 +2,12 @@ package models
 
 import "golang.org/x/crypto/bcrypt"
 
+type Category struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Image []byte `json:"image"`
+}
+
 type DoorLock struct {
 	PartNumber           string  `json:"part_number"`
 	Title                string  `json:"title"`

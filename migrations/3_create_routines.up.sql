@@ -57,6 +57,62 @@ BEGIN
 END;
 $$;
 
+CREATE FUNCTION fn_locks_ordered_by_rating(num_of_records INT)
+    RETURNS TABLE (
+                      part_number VARCHAR(30),
+                      title VARCHAR(100),
+                      image SMALLINT[],
+                      price REAL,
+                      sale_price REAL,
+                      equipment VARCHAR(256),
+                      color_id INTEGER,
+                      description VARCHAR(4096),
+                      category_id INTEGER,
+                      card_memory INTEGER,
+                      material_id INTEGER,
+                      has_mobile_application BOOLEAN,
+                      power_supply VARCHAR(50),
+                      size VARCHAR(50),
+                      weight INTEGER,
+                      door_types_id INTEGER[],
+                      door_thickness_min INTEGER,
+                      door_thickness_max INTEGER,
+                      rating REAL,
+                      quantity INTEGER
+                  )
+LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    RETURN QUERY
+        SELECT
+            door_locks.part_number,
+            door_locks.title,
+            door_locks.image,
+            door_locks.price,
+            door_locks.sale_price,
+            door_locks.equipment,
+            door_locks.color_id,
+            door_locks.description,
+            door_locks.category_id,
+            door_locks.card_memory,
+            door_locks.material_id,
+            door_locks.has_mobile_application,
+            door_locks.power_supply,
+            door_locks.size,
+            door_locks.weight,
+            door_locks.door_types_id,
+            door_locks.door_thickness_min,
+            door_locks.door_thickness_max,
+            door_locks.rating,
+            door_locks.quantity
+        FROM door_locks
+        ORDER BY rating
+        LIMIT num_of_records;
+END;
+$$;
+
+
 create procedure save_door_lock(IN part_number character varying, IN title character varying, IN image smallint[], IN price real, IN sale_price real, IN equipment character varying, IN color_id integer, IN description character varying, IN category_id integer, IN card_memory integer, IN material_id integer, IN has_mobile_application boolean, IN power_supply character varying, IN size character varying, IN weight integer, IN door_types_id integer[], IN door_thickness_min integer, IN door_thickness_max integer, IN rating real, IN quantity integer)
     language plpgsql
 as
