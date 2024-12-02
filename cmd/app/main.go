@@ -11,18 +11,20 @@ import (
 
 	"github.com/rogue0026/door-locker/internal/application"
 	"github.com/rogue0026/door-locker/internal/config"
-	"github.com/rogue0026/door-locker/internal/storage/postgres"
 )
 
 func main() {
 	appCfg := config.MustLoad()
-	// postgres://user:password@localhost:5432/db_name
 	DSN := fmt.Sprintf("postgres://%s:%s@%s/%s", appCfg.DBUser, appCfg.DBUserPassword, appCfg.DBHost, appCfg.DatabaseName)
-	appStorage, err := postgres.New(context.Background(), DSN)
+	pool, err := application.NewConnectionPool(context.Background(), DSN)
 	if err != nil {
 		panic(err)
 	}
-	app := application.New(appCfg, &appStorage)
+	app, err := application.New(appCfg, pool)
+	if err != nil {
+		panic(err)
+	}
+
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	wg := sync.WaitGroup{}
@@ -48,7 +50,7 @@ func main() {
 			fmt.Printf("error occured while shutdown http server: %s", err.Error())
 		}
 		fmt.Println("closing database connection")
-		app.AppStorage.Close()
+		app.CloseDatabaseConnection()
 		fmt.Println("database connection closed")
 	}()
 	wg.Wait()

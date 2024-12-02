@@ -3,17 +3,18 @@ package application
 import (
 	"context"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rogue0026/door-locker/internal/config"
+	pgAccounts "github.com/rogue0026/door-locker/internal/storage/accounts/postgres"
+	pgLocks "github.com/rogue0026/door-locker/internal/storage/locks/postgres"
+	"github.com/rogue0026/door-locker/internal/transport/http/handlers/accounts"
+	"github.com/rogue0026/door-locker/internal/transport/http/handlers/locks"
+	"github.com/rogue0026/door-locker/internal/transport/http/middleware"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
-	"time"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/rogue0026/door-locker/internal/config"
-	"github.com/rogue0026/door-locker/internal/storage/postgres"
-	"github.com/rogue0026/door-locker/internal/transport/http/handlers"
-	"github.com/rogue0026/door-locker/internal/transport/http/middleware"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -21,52 +22,50 @@ const (
 	envProd string = "production"
 )
 
-type BackendApplication struct {
-	AppLogger  *logrus.Logger
-	AppStorage *postgres.Storage
+type Application struct {
+	Logger     *logrus.Logger
 	HTTPServer *http.Server
+	Accounts   *pgAccounts.Repository
+	Locks      *pgLocks.Repository
+	dbConnPool *pgxpool.Pool
 }
 
-func New(cfg config.AppConfig, appStorage *postgres.Storage) BackendApplication {
-	appLogger := setupLogger(cfg.AppEnvironment, os.Stdout)
+func New(cfg config.AppConfig, connPool *pgxpool.Pool) (Application, error) {
+	logger := setupLogger(cfg.AppEnvironment, os.Stdout)
+	accountsStorage := pgAccounts.New(connPool)
+	locksStorage := pgLocks.New(connPool)
 
-	loggingMw := middleware.LoggingMiddleware(appLogger)
+	router := chi.NewRouter()
+	router.Use(middleware.LoggingMiddleware(logger), middleware.AccessControl)
+	router.Method(http.MethodGet, "/api/door-locks", locks.Paginated(logger, locksStorage))
+	router.Method(http.MethodGet, "/api/door-locks/popular", locks.Popular(logger, locksStorage))
+	router.Method(http.MethodGet, "/api/door-locks/categories", locks.Categories(logger, locksStorage))
+	router.Method(http.MethodPost, "/api/door-locks", locks.Create(logger, locksStorage))
+	router.Method(http.MethodDelete, "/api/door-locks", locks.Delete(logger, locksStorage))
+	router.Method(http.MethodPost, "/api/accounts", accounts.Create(logger, accountsStorage))
+	router.Method(http.MethodDelete, "/api/accounts", accounts.Delete(logger, accountsStorage))
 
-	appRouter := chi.NewRouter()
-	appRouter.Use(loggingMw, middleware.AccessControl)
-
-	appRouter.Method(http.MethodGet, "/api/door-locks", handlers.DoorLockByLimitOffsetHandler(appLogger, appStorage))
-	appRouter.Method(http.MethodGet, "/api/door-locks/popular", handlers.PopularDoorLocks(appLogger, appStorage))
-	appRouter.Method(http.MethodGet, "/api/door-locks/categories", handlers.DoorLocksCategories(appLogger, appStorage))
-	appRouter.Method(http.MethodPost, "/api/door-locks", handlers.AddDoorLock(appLogger, appStorage))
-	appRouter.Method(http.MethodDelete, "/api/door-locks", handlers.DeleteDoorLock(appLogger, appStorage))
-	appRouter.Method(http.MethodPost, "/api/accounts", handlers.RegisterAccount(appLogger, appStorage))
-	appRouter.Method(http.MethodDelete, "/api/accounts", handlers.DeleteAccount(appLogger, appStorage))
-
-	addr := fmt.Sprintf("%s:%d", cfg.HTTPServerHost, cfg.HTTPServerPort)
 	server := &http.Server{
-		Handler: appRouter,
-		Addr:    addr,
+		Addr:    fmt.Sprintf("%s:%d", cfg.HTTPServerHost, cfg.HTTPServerPort),
+		Handler: router,
 	}
-	a := BackendApplication{
-		AppLogger:  setupLogger(cfg.AppEnvironment, os.Stdout),
-		AppStorage: appStorage,
+
+	app := Application{
+		Logger:     logger,
 		HTTPServer: server,
+		Accounts:   &accountsStorage,
+		Locks:      &locksStorage,
+		dbConnPool: connPool,
 	}
-	return a
+	return app, nil
 }
 
-func (a *BackendApplication) Run() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*1)
-	defer cancel()
-	a.AppLogger.Debug("checking connection with database")
-	err := a.AppStorage.Ping(ctx)
-	if err != nil {
-		panic(err)
-	}
-	a.AppLogger.Debug("database connection established")
-	a.AppLogger.Infof("starting server at %s", a.HTTPServer.Addr)
+func (a Application) Run() error {
 	return a.HTTPServer.ListenAndServe()
+}
+
+func (a Application) CloseDatabaseConnection() {
+	a.dbConnPool.Close()
 }
 
 func setupLogger(appEnvironment string, logsOut io.Writer) *logrus.Logger {
@@ -97,4 +96,20 @@ func setupLogger(appEnvironment string, logsOut io.Writer) *logrus.Logger {
 		panic("logger not initialized")
 	}
 	return logger
+}
+
+func NewConnectionPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
+	const fn = "internal.storage.postgres.New"
+
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", fn, err)
+	}
+
+	err = pool.Ping(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", fn, err)
+	}
+
+	return pool, nil
 }
