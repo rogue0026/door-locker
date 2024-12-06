@@ -1,168 +1,143 @@
-BEGIN;
-
-CREATE FUNCTION fn_locks_limit_offset(page_number INT, records_per_page INT)
-    RETURNS TABLE(
-                     part_number VARCHAR(30),
-                     title VARCHAR(100),
-                     image SMALLINT[],
-                     price REAL,
-                     sale_price REAL,
-                     equipment VARCHAR(256),
-                     color_id INTEGER,
-                     description VARCHAR(4096),
-                     category_id INTEGER,
-                     card_memory INTEGER,
-                     material_id INTEGER,
-                     has_mobile_application BOOLEAN,
-                     power_supply VARCHAR(50),
-                     size VARCHAR(50),
-                     weight INTEGER,
-                     door_types_id INTEGER[],
-                     door_thickness_min INTEGER,
-                     door_thickness_max INTEGER,
-                     rating REAL,
-                     quantity INTEGER)
-    LANGUAGE plpgsql
-AS
-$$
-DECLARE
-    rows_to_skip INT;
-BEGIN
-    rows_to_skip = (page_number - 1) * records_per_page;
-    RETURN QUERY
-        SELECT
-            door_locks.part_number,
-            door_locks.title,
-            door_locks.image,
-            door_locks.price,
-            door_locks.sale_price,
-            door_locks.equipment,
-            door_locks.color_id,
-            door_locks.description,
-            door_locks.category_id,
-            door_locks.card_memory,
-            door_locks.material_id,
-            door_locks.has_mobile_application,
-            door_locks.power_supply,
-            door_locks.size,
-            door_locks.weight,
-            door_locks.door_types_id,
-            door_locks.door_thickness_min,
-            door_locks.door_thickness_max,
-            door_locks.rating,
-            door_locks.quantity
-        FROM door_locks
-        LIMIT records_per_page
-            OFFSET rows_to_skip;
-END;
-$$;
-
 CREATE FUNCTION fn_locks_ordered_by_rating(num_of_records INT)
     RETURNS TABLE (
                       part_number VARCHAR(30),
                       title VARCHAR(100),
-                      image SMALLINT[],
-                      price REAL,
-                      sale_price REAL,
+                      image TEXT[],
+                      price INT,
+                      sale_price INT,
                       equipment VARCHAR(256),
-                      color_id INTEGER,
+                      colors VARCHAR(50)[],
                       description VARCHAR(4096),
-                      category_id INTEGER,
+                      category VARCHAR(50),
                       card_memory INTEGER,
-                      material_id INTEGER,
+                      material VARCHAR(40)[],
                       has_mobile_application BOOLEAN,
-                      power_supply VARCHAR(50),
+                      power_supply INT,
                       size VARCHAR(50),
-                      weight INTEGER,
-                      door_types_id INTEGER[],
-                      door_thickness_min INTEGER,
-                      door_thickness_max INTEGER,
+                      weight INT,
+                      door_type VARCHAR(50)[],
+                      door_thickness_min INT,
+                      door_thickness_max INT,
                       rating REAL,
-                      quantity INTEGER
-                  )
+                      quantity INT)
 LANGUAGE plpgsql
 AS
 $$
-BEGIN
-    RETURN QUERY
-        SELECT
-            door_locks.part_number,
-            door_locks.title,
-            door_locks.image,
-            door_locks.price,
-            door_locks.sale_price,
-            door_locks.equipment,
-            door_locks.color_id,
-            door_locks.description,
-            door_locks.category_id,
-            door_locks.card_memory,
-            door_locks.material_id,
-            door_locks.has_mobile_application,
-            door_locks.power_supply,
-            door_locks.size,
-            door_locks.weight,
-            door_locks.door_types_id,
-            door_locks.door_thickness_min,
-            door_locks.door_thickness_max,
-            door_locks.rating,
-            door_locks.quantity
-        FROM door_locks
-        ORDER BY rating
-        LIMIT num_of_records;
-END;
+    DECLARE
+
+    BEGIN
+        RETURN QUERY
+            SELECT
+                locks.part_number,
+                locks.title,
+                locks.image,
+                locks.price,
+                locks.sale_price,
+                locks.equipment,
+                locks.colors,
+                locks.description,
+                c.name as category_name,
+                locks.card_memory,
+                locks.material,
+                locks.has_mobile_application,
+                locks.power_supply,
+                locks.size,
+                locks.weight,
+                locks.door_type,
+                locks.door_thickness_min,
+                locks.door_thickness_max,
+                locks.rating,
+                locks.quantity
+            FROM locks
+            JOIN categories c on locks.category_id = c.id
+            ORDER BY rating
+            LIMIT num_of_records;
+    END;
 $$;
 
+CREATE PROCEDURE save_lock(
+    part_number VARCHAR(30),
+    title VARCHAR(100),
+    image TEXT[],
+    price INT,
+    sale_price INT,
+    equipment VARCHAR(256),
+    colors VARCHAR(50)[],
+    description VARCHAR(4096),
+    category VARCHAR(50),
+    card_memory INT,
+    material VARCHAR(40)[],
+    has_mobile_application BOOLEAN,
+    power_supply INT,
+    size VARCHAR(50),
+    weight INT,
+    door_type VARCHAR(50)[],
+    door_thickness_min INT,
+    door_thickness_max INT,
+    rating REAL,
+    quantity INT)
+LANGUAGE plpgsql
+AS
+    $$
+        DECLARE
+            __category_id INT = 0;
+        BEGIN
 
-create procedure save_door_lock(IN part_number character varying, IN title character varying, IN image smallint[], IN price real, IN sale_price real, IN equipment character varying, IN color_id integer, IN description character varying, IN category_id integer, IN card_memory integer, IN material_id integer, IN has_mobile_application boolean, IN power_supply character varying, IN size character varying, IN weight integer, IN door_types_id integer[], IN door_thickness_min integer, IN door_thickness_max integer, IN rating real, IN quantity integer)
-    language plpgsql
-as
-$$
-begin
-    insert into door_locks(
-        part_number,
-        title,
-        image,
-        price,
-        sale_price,
-        equipment,
-        color_id,
-        description,
-        category_id,
-        card_memory,
-        material_id,
-        has_mobile_application,
-        power_supply,
-        size,
-        weight,
-        door_types_id,
-        door_thickness_min,
-        door_thickness_max,
-        rating,
-        quantity)
-    values (
-               part_number,
-               title,
-               image,
-               price,
-               sale_price,
-               equipment,
-               color_id,
-               description,
-               category_id,
-               card_memory,
-               material_id,
-               has_mobile_application,
-               power_supply,
-               size,
-               weight,
-               door_types_id,
-               door_thickness_min,
-               door_thickness_max,
-               rating,
-               quantity);
-end;
+            SELECT
+                id
+            INTO __category_id
+            FROM categories
+            WHERE name = category;
+
+            IF __category_id = 0 THEN
+                INSERT INTO categories(name, image) VALUES (category, '{"not defined"}');
+            END IF;
+
+            INSERT INTO locks (
+                part_number,
+                title,
+                image,
+                price,
+                sale_price,
+                equipment,
+                colors,
+                description,
+                category_id,
+                card_memory,
+                material,
+                has_mobile_application,
+                power_supply,
+                size,
+                weight,
+                door_type,
+                door_thickness_min,
+                door_thickness_max,
+                rating,
+                quantity)
+            VALUES (
+                save_lock.part_number,
+                save_lock.title,
+                save_lock.image,
+                save_lock.price,
+                save_lock.sale_price,
+                save_lock.equipment,
+                save_lock.colors,
+                save_lock.description,
+                __category_id,
+                save_lock.card_memory,
+                save_lock.material,
+                save_lock.has_mobile_application,
+                save_lock.power_supply,
+                save_lock.size,
+                save_lock.weight,
+                save_lock.door_type,
+                save_lock.door_thickness_min,
+                save_lock.door_thickness_max,
+                save_lock.rating,
+                save_lock.quantity
+            );
+        END;
 $$;
-
 
 create procedure delete_door_lock_by_partnumber(partnumber varchar(30))
     language plpgsql
@@ -170,9 +145,7 @@ as
 $$
 begin
     delete
-    from door_locks
+    from locks
     where part_number = partnumber;
 end;
 $$;
-
-COMMIT;

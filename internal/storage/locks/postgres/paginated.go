@@ -2,21 +2,16 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"github.com/rogue0026/door-locker/internal/models"
-	"github.com/rogue0026/door-locker/internal/storage"
 )
 
 func (r Repository) Locks(ctx context.Context, pageNumber int64, recordsOnPage int64) ([]models.Lock, error) {
-	const fn = "internal.storage.postgres.locks.Locks"
+	const fn = "internal.storage.locks.postgres.Locks"
 	query := `SELECT * FROM fn_locks_limit_offset($1, $2)`
 	rows, err := r.pool.Query(ctx, query, pageNumber, recordsOnPage)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("%s: %w", fn, storage.ErrRecordsNotFound)
-		}
+		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	defer rows.Close()
 	recordsFromDB := make([]models.Lock, 0, recordsOnPage)
@@ -29,16 +24,16 @@ func (r Repository) Locks(ctx context.Context, pageNumber int64, recordsOnPage i
 			&scannedRow.Price,
 			&scannedRow.SalePrice,
 			&scannedRow.Equipment,
-			&scannedRow.ColorID,
+			&scannedRow.Colors,
 			&scannedRow.Description,
-			&scannedRow.CategoryID,
+			&scannedRow.Category,
 			&scannedRow.CardMemory,
-			&scannedRow.MaterialID,
+			&scannedRow.Material,
 			&scannedRow.HasMobileApplication,
 			&scannedRow.PowerSupply,
 			&scannedRow.Size,
 			&scannedRow.Weight,
-			&scannedRow.DoorsTypeID,
+			&scannedRow.DoorType,
 			&scannedRow.DoorThicknessMin,
 			&scannedRow.DoorThicknessMax,
 			&scannedRow.Rating,
@@ -48,8 +43,7 @@ func (r Repository) Locks(ctx context.Context, pageNumber int64, recordsOnPage i
 		}
 		recordsFromDB = append(recordsFromDB, scannedRow)
 	}
-	err = rows.Err()
-	if err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("%s: %w", fn, err)
 	}
 	return recordsFromDB, nil

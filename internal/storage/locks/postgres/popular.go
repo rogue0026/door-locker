@@ -8,11 +8,11 @@ import (
 )
 
 func (r Repository) LocksByRating(ctx context.Context, recordsOnPage int64) ([]models.Lock, error) {
-	const fn = "internal.storage.postgres.locks.LocksByRating"
+	const fn = "internal.storage.locks.postgres.LocksByRating"
 	args := pgx.NamedArgs{
-		"records_on_page": recordsOnPage,
+		"num_of_records": recordsOnPage,
 	}
-	query := `SELECT * FROM fn_locks_ordered_by_rating(@records_on_page);`
+	query := `SELECT * FROM fn_locks_ordered_by_rating(@num_of_records);`
 	rows, err := r.pool.Query(ctx, query, args)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", fn, err)
@@ -28,16 +28,16 @@ func (r Repository) LocksByRating(ctx context.Context, recordsOnPage int64) ([]m
 			&scannedRow.Price,
 			&scannedRow.SalePrice,
 			&scannedRow.Equipment,
-			&scannedRow.ColorID,
+			&scannedRow.Colors,
 			&scannedRow.Description,
-			&scannedRow.CategoryID,
+			&scannedRow.Category,
 			&scannedRow.CardMemory,
-			&scannedRow.MaterialID,
+			&scannedRow.Material,
 			&scannedRow.HasMobileApplication,
 			&scannedRow.PowerSupply,
 			&scannedRow.Size,
 			&scannedRow.Weight,
-			&scannedRow.DoorsTypeID,
+			&scannedRow.DoorType,
 			&scannedRow.DoorThicknessMin,
 			&scannedRow.DoorThicknessMax,
 			&scannedRow.Rating,

@@ -1,1 +1,0 @@
-DROP PROCEDURE add_account;

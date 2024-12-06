@@ -14,10 +14,11 @@ type LockSaver interface {
 }
 
 func Create(logger *logrus.Logger, locks LockSaver) http.Handler {
-	const fn = "internal.transport.http.handlers.Save"
+	const fn = "internal.transport.http.handlers.locks.Create"
 	h := func(w http.ResponseWriter, r *http.Request) {
 		reqBody, err := io.ReadAll(r.Body)
 		if err != nil {
+			logger.Errorf("%s: %s", fn, err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -34,11 +35,7 @@ func Create(logger *logrus.Logger, locks LockSaver) http.Handler {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		js, err := json.Marshal(map[string]interface{}{"message": "entry has been added"})
-		if err != nil {
-			logger.Errorf("%s: %s", fn, err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		js, _ := json.Marshal(map[string]interface{}{"message": "entry has been added"})
 		w.WriteHeader(http.StatusCreated)
 		_, _ = w.Write(js)
 	}

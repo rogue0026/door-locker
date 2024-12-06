@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
-    <file url="PROJECT" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/1_creating_tables.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/3_create_routines.up.sql" dialect="PostgreSQL" />
   </component>
 </project>
