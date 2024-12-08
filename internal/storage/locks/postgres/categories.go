@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+
 	"github.com/rogue0026/door-locker/internal/models"
 )
 
@@ -13,8 +14,8 @@ func (r Repository) Categories(ctx context.Context) ([]models.Category, error) {
 SELECT
 	id,
 	name, 
-	image
-FROM lock_categories;`
+	image_link
+FROM categories;`
 
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {

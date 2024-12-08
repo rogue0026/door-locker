@@ -2,6 +2,10 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/migrations/1_creating_tables.up.sql" dialect="PostgreSQL" />
-    <file url="file://$PROJECT_DIR$/migrations/3_create_routines.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/2_create_fn_locks_limit_offset.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/3_create_procedure_save_lock.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/4_create_fn_locks_ordered_by_rating.up.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/migrations/5_create_procedure_delete_door_lock_by_part_number.up.sql" dialect="PostgreSQL" />
+    <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>

@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS fn_locks_ordered_by_rating(num_of_records INT);

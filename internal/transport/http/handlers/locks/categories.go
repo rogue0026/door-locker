@@ -3,9 +3,10 @@ package locks
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+
 	"github.com/rogue0026/door-locker/internal/models"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type CategoryFetcher interface {

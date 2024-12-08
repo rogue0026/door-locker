@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/rogue0026/door-locker/internal/models"
 )
@@ -24,7 +25,7 @@ func (r Repository) LocksByRating(ctx context.Context, recordsOnPage int64) ([]m
 		err = rows.Scan(
 			&scannedRow.PartNumber,
 			&scannedRow.Title,
-			&scannedRow.Image,
+			&scannedRow.Images,
 			&scannedRow.Price,
 			&scannedRow.SalePrice,
 			&scannedRow.Equipment,

@@ -18,7 +18,7 @@ type LockFetcher interface {
 }
 
 func Paginated(logger *logrus.Logger, fetcher LockFetcher) http.Handler {
-	const fn = "internal.transport.http.handlers.Locks"
+	const fn = "internal.transport.http.handlers.Paginated"
 	h := func(w http.ResponseWriter, r *http.Request) {
 		pageQuery := r.URL.Query().Get("page")
 		pageNumber, err := strconv.ParseInt(pageQuery, 10, 64)
@@ -30,9 +30,9 @@ func Paginated(logger *logrus.Logger, fetcher LockFetcher) http.Handler {
 
 		recordsQuery := r.URL.Query().Get("records")
 		recordsOnPage, err := strconv.ParseInt(recordsQuery, 10, 64)
-		if err != nil || (recordsOnPage != 10 && recordsOnPage != 20 && recordsOnPage != 50 && recordsOnPage != 5) {
+		if err != nil || (recordsOnPage != 5 && recordsOnPage != 10 && recordsOnPage != 20 && recordsOnPage != 50) {
 			w.WriteHeader(http.StatusBadRequest)
-			_, _ = w.Write([]byte("records on page value must be 10, 20 or 50"))
+			_, _ = w.Write([]byte("records on page value must be 5, 10, 20 or 50"))
 			return
 		}
 		records, err := fetcher.Locks(r.Context(), pageNumber, recordsOnPage)
@@ -45,6 +45,10 @@ func Paginated(logger *logrus.Logger, fetcher LockFetcher) http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte("internal server error occurred"))
 			}
+			return
+		}
+		if len(records) == 0 {
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		jsonData, err := json.MarshalIndent(&records, "", "  ")

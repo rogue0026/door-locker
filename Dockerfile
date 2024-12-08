@@ -1,21 +1,35 @@
-# Build
-# =======================================================
-FROM golang:1.22.5-alpine3.20 AS base
+# Stage 1: Build
+FROM golang:1.22.5-bullseye AS builder
 
-RUN mkdir /door-locker
+# Установка рабочей директории внутри контейнера
+WORKDIR /app
 
-COPY . /door-locker
+# Копируем go.mod и go.sum файлы
+COPY go.mod go.sum ./
 
-WORKDIR /door-locker
+# Устанавливаем зависимости
+RUN go mod download
 
-RUN go build -o /door-locker/application ./cmd/app/main.go
+# Копируем весь код в рабочую директорию
+COPY . .
 
-# Production
-# =======================================================
-FROM scratch AS prod
+# Сборка приложения
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app ./cmd/app/main.go
 
-COPY --from=base /door-locker/application /door-locker/application
+# Stage 2: Run
+FROM alpine:latest
 
+# Установка сертификатов (необходимо для HTTPS-запросов)
+# RUN apk --no-cache add ca-certificates
+
+# Установка рабочей директории внутри контейнера
+WORKDIR /root/
+
+# Копируем скомпилированное приложение из стадии сборки
+COPY --from=builder /app/app .
+
+# Указываем порт, который будет использовать приложение
 EXPOSE 9090
 
-CMD ["./door-locker/application"]
+# Команда для запуска приложения
+CMD ["./app"]

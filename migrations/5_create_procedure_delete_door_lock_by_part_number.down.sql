@@ -1,0 +1,1 @@
+DROP PROCEDURE IF EXISTS delete_door_lock_by_partnumber(partnumber VARCHAR(30));

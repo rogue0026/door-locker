@@ -1,9 +1,9 @@
 package models
 
 type Lock struct {
-	PartNumber           string   `json:"part_number"`
+	PartNumber           int64    `json:"part_number,omitempty"`
 	Title                string   `json:"title"`
-	Image                []string `json:"image"`
+	Images               []string `json:"images"`
 	Price                int      `json:"price"`
 	SalePrice            int      `json:"sale_price"`
 	Equipment            string   `json:"equipment"`
@@ -19,6 +19,6 @@ type Lock struct {
 	DoorType             []string `json:"door_type"`
 	DoorThicknessMin     int      `json:"door_thickness_min"`
 	DoorThicknessMax     int      `json:"door_thickness_max"`
-	Rating               int      `json:"rating"`
+	Rating               float32  `json:"rating"`
 	Quantity             int      `json:"quantity"`
 }

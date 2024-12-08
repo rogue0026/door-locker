@@ -26,7 +26,7 @@ func Create(logger *logrus.Logger, locks LockSaver) http.Handler {
 		err = json.Unmarshal(reqBody, &lock)
 		if err != nil {
 			logger.Errorf("%s: %s", fn, err.Error())
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		err = locks.Save(r.Context(), lock)

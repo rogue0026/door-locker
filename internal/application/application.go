@@ -11,6 +11,7 @@ import (
 	"github.com/rogue0026/door-locker/internal/transport/http/handlers/accounts"
 	"github.com/rogue0026/door-locker/internal/transport/http/handlers/locks"
 	"github.com/rogue0026/door-locker/internal/transport/http/middleware"
+	"github.com/rogue0026/door-locker/pkg/logging"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -31,7 +32,7 @@ type Application struct {
 }
 
 func New(cfg config.AppConfig, connPool *pgxpool.Pool) (Application, error) {
-	logger := setupLogger(cfg.AppEnvironment, os.Stdout)
+	logger := logging.SetupLogger(cfg.AppEnvironment, os.Stdout)
 	accountsStorage := pgAccounts.New(connPool)
 	locksStorage := pgLocks.New(connPool)
 
@@ -68,15 +69,15 @@ func (a Application) CloseDatabaseConnection() {
 	a.dbConnPool.Close()
 }
 
-func setupLogger(appEnvironment string, logsOut io.Writer) *logrus.Logger {
+func SetupLogger(appEnvironment string, logsOut io.Writer) *logrus.Logger {
 	var logger *logrus.Logger
 	switch appEnvironment {
 	case envDev:
 		logger = &logrus.Logger{
 			Out: logsOut,
-			Formatter: &logrus.TextFormatter{
+			Formatter: &logrus.JSONFormatter{
 				TimestampFormat: "02.01.2006 15:04:05",
-				FullTimestamp:   true,
+				PrettyPrint:     true,
 			},
 			ReportCaller: true,
 			Level:        logrus.DebugLevel,
@@ -86,7 +87,7 @@ func setupLogger(appEnvironment string, logsOut io.Writer) *logrus.Logger {
 			Out: logsOut,
 			Formatter: &logrus.JSONFormatter{
 				TimestampFormat: "02.01.2006 15:04:05",
-				PrettyPrint:     false,
+				PrettyPrint:     true,
 			},
 			ReportCaller: true,
 			Level:        logrus.InfoLevel,

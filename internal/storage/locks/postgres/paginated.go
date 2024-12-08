@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+
 	"github.com/rogue0026/door-locker/internal/models"
 )
 
@@ -20,7 +21,7 @@ func (r Repository) Locks(ctx context.Context, pageNumber int64, recordsOnPage i
 		err = rows.Scan(
 			&scannedRow.PartNumber,
 			&scannedRow.Title,
-			&scannedRow.Image,
+			&scannedRow.Images,
 			&scannedRow.Price,
 			&scannedRow.SalePrice,
 			&scannedRow.Equipment,
