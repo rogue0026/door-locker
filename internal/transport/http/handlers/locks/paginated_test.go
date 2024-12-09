@@ -2,124 +2,144 @@ package locks
 
 import (
 	"context"
-	"fmt"
-	"github.com/rogue0026/door-locker/internal/models"
-	"github.com/rogue0026/door-locker/pkg/logging"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strconv"
 	"testing"
+
+	"github.com/rogue0026/door-locker/internal/models"
+	"github.com/rogue0026/door-locker/pkg/logging"
 )
 
-/*
-type LockFetcher interface {
-	Locks(ctx context.Context, pageNumber int64, recordsOnPage int64) ([]models.Lock, error)
-	LocksByRating(ctx context.Context, recordsOnPage int64) ([]models.Lock, error)
+type MockFetcher struct {
 }
-*/
 
-type NormalMockFetcher struct{}
+func (mf MockFetcher) Locks(_ context.Context, pageNumber int64, recordsOnPage int64) ([]models.Lock, error) {
+	return mf.NonEmptyResult()
+}
 
-func (mf NormalMockFetcher) Locks(_ context.Context, pageNumber int64, recordsOnPage int64) ([]models.Lock, error) {
+func (mf MockFetcher) LocksByRating(ctx context.Context, recordsOnPage int64) ([]models.Lock, error) {
+	return nil, nil
+}
+
+func (mf MockFetcher) EmptyResult() ([]models.Lock, error) {
+	return []models.Lock{}, nil
+}
+
+func (mf MockFetcher) NonEmptyResult() ([]models.Lock, error) {
 	locks := []models.Lock{
 		{
-			PartNumber:           1,
-			Title:                "Test Lock 1",
-			Images:               nil,
-			Price:                1200,
-			SalePrice:            1000,
-			Equipment:            "test equipment",
-			Colors:               []string{"red", "green", "blue"},
-			Description:          "test description",
-			Category:             "test category",
-			CardMemory:           233,
-			Material:             []string{"metal", "carbon"},
-			HasMobileApplication: false,
+			Title:                "TestLock",
+			Images:               []string{"test_image1.png", "test_image2.png"},
+			Price:                12000,
+			SalePrice:            10100,
+			Equipment:            "Lock, fingerprint module, installation guide",
+			Colors:               []string{"gold", "white", "black"},
+			Description:          "Standard lock",
+			Category:             "For home",
+			CardMemory:           200,
+			Material:             []string{"metal"},
+			HasMobileApplication: true,
 			PowerSupply:          12,
-			Size:                 "233 x 12 x 101",
-			Weight:               4300,
-			DoorType:             []string{"type1", "type2"},
-			DoorThicknessMin:     230,
-			DoorThicknessMax:     430,
-			Rating:               12.2324,
-			Quantity:             101,
+			Size:                 "120 x 220 x 10",
+			Weight:               2000,
+			DoorType:             []string{"garage"},
+			DoorThicknessMin:     100,
+			DoorThicknessMax:     200,
+			Rating:               4.23,
+			Quantity:             100,
 		},
 		{
-			PartNumber:           2,
-			Title:                "Test Lock 2",
-			Images:               nil,
-			Price:                1200,
-			SalePrice:            1000,
-			Equipment:            "test equipment",
-			Colors:               []string{"red", "green", "blue"},
-			Description:          "test description",
-			Category:             "test category",
-			CardMemory:           233,
-			Material:             []string{"metal", "carbon"},
-			HasMobileApplication: false,
+			Title:                "TestLock1",
+			Images:               []string{"test_image1.png", "test_image2.png"},
+			Price:                13000,
+			SalePrice:            12100,
+			Equipment:            "Lock, fingerprint module, installation guide",
+			Colors:               []string{"gold", "white", "black"},
+			Description:          "Standard lock",
+			Category:             "For home",
+			CardMemory:           200,
+			Material:             []string{"metal"},
+			HasMobileApplication: true,
 			PowerSupply:          12,
-			Size:                 "233 x 12 x 101",
-			Weight:               4300,
-			DoorType:             []string{"type1", "type2"},
-			DoorThicknessMin:     230,
-			DoorThicknessMax:     430,
-			Rating:               12.2324,
-			Quantity:             101,
-		},
-		{
-			PartNumber:           3,
-			Title:                "Test Lock 3",
-			Images:               nil,
-			Price:                1200,
-			SalePrice:            1000,
-			Equipment:            "test equipment",
-			Colors:               []string{"red", "green", "blue"},
-			Description:          "test description",
-			Category:             "test category",
-			CardMemory:           233,
-			Material:             []string{"metal", "carbon"},
-			HasMobileApplication: false,
-			PowerSupply:          12,
-			Size:                 "233 x 12 x 101",
-			Weight:               4300,
-			DoorType:             []string{"type1", "type2"},
-			DoorThicknessMin:     230,
-			DoorThicknessMax:     430,
-			Rating:               12.2324,
-			Quantity:             101,
+			Size:                 "120 x 220 x 10",
+			Weight:               2000,
+			DoorType:             []string{"garage"},
+			DoorThicknessMin:     100,
+			DoorThicknessMax:     200,
+			Rating:               4.23,
+			Quantity:             100,
 		},
 	}
 	return locks, nil
 }
 
-func (mf NormalMockFetcher) LocksByRating(_ context.Context, _ int64) ([]models.Lock, error) {
+type EmptyFetcher struct{}
+
+func (ef EmptyFetcher) LocksByRating(ctx context.Context, recordsOnPage int64) ([]models.Lock, error) {
 	return nil, nil
 }
 
-type EmptyMockFetcher struct{}
-
-func (mf EmptyMockFetcher) Locks(_ context.Context, pageNumber int64, recordsOnPage int64) ([]models.Lock, error) {
-	empty := make([]models.Lock, 0)
-	return empty, nil
-}
-
-func (mf EmptyMockFetcher) LocksByRating(_ context.Context, _ int64) ([]models.Lock, error) {
-	return nil, nil
+func (ef EmptyFetcher) Locks(_ context.Context, pageNumber int64, recordsOnPage int64) ([]models.Lock, error) {
+	return []models.Lock{}, nil
 }
 
 func TestPaginated(t *testing.T) {
-	v := url.Values{}
-	v.Add("page", "1")
-	v.Add("records", "5")
 	testLogger := logging.SetupLogger("development", os.Stdout)
-	mockFetcher := NormalMockFetcher{}
-
-	paginatedHandler := Paginated(testLogger, mockFetcher)
-	testReq := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/door-locks?%s", v.Encode()), nil)
-	resp := httptest.NewRecorder()
-	paginatedHandler.ServeHTTP(resp, testReq)
-	if resp.Code != http.StatusOK {
-		t.Errorf("invalid status code, have %d, want %d", resp.Code, http.StatusOK)
+	mockFetcher := MockFetcher{}
+	tests := []struct {
+		name         string
+		handler      http.Handler
+		pages        []int
+		records      []int
+		codeExpected int
+	}{
+		{
+			name:         "valid page and records",
+			handler:      Paginated(testLogger, mockFetcher),
+			pages:        []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			records:      []int{5, 10, 20, 50},
+			codeExpected: http.StatusOK,
+		},
+		{
+			name:         "invalid page",
+			handler:      Paginated(testLogger, mockFetcher),
+			pages:        []int{0, -1, -2, -3, -1000},
+			records:      []int{5, 10, 20, 50},
+			codeExpected: http.StatusBadRequest,
+		},
+		{
+			name:         "invalid records number",
+			handler:      Paginated(testLogger, mockFetcher),
+			pages:        []int{1, 2, 3, 4, 5},
+			records:      []int{-5, -10, -20, -50},
+			codeExpected: http.StatusBadRequest,
+		},
+		{
+			name:         "empty result from database",
+			handler:      Paginated(testLogger, EmptyFetcher{}),
+			pages:        []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			records:      []int{5, 10, 20, 50},
+			codeExpected: http.StatusNotFound,
+		},
+	}
+	for _, curTest := range tests {
+		t.Run(curTest.name, func(t *testing.T) {
+			for _, pageNum := range curTest.pages {
+				for _, recordsNum := range curTest.records {
+					queryString := url.Values{}
+					queryString.Set("page", strconv.Itoa(pageNum))
+					queryString.Set("records", strconv.Itoa(recordsNum))
+					testRequest := httptest.NewRequest(http.MethodGet, "/api/door-locks?"+queryString.Encode(), nil)
+					resp := httptest.NewRecorder()
+					curTest.handler.ServeHTTP(resp, testRequest)
+					if resp.Code != curTest.codeExpected {
+						t.Errorf("%s: invalid status code, got %d, expect: %d", curTest.name, resp.Code, curTest.codeExpected)
+					}
+				}
+			}
+		})
 	}
 }

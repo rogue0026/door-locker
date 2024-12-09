@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r Repository) Delete(ctx context.Context, partNumber string) error {
+func (r Repository) Delete(ctx context.Context, partNumber int64) error {
 	const fn = "internal.storage.locks.postgres.Delete"
 	args := pgx.NamedArgs{
 		"partnumber": partNumber,

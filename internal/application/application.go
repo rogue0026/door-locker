@@ -42,7 +42,7 @@ func New(cfg config.AppConfig, connPool *pgxpool.Pool) (Application, error) {
 	router.Method(http.MethodGet, "/api/door-locks/popular", locks.Popular(logger, locksStorage))
 	router.Method(http.MethodGet, "/api/door-locks/categories", locks.Categories(logger, locksStorage))
 	router.Method(http.MethodPost, "/api/door-locks", locks.Create(logger, locksStorage))
-	router.Method(http.MethodDelete, "/api/door-locks", locks.Delete(logger, locksStorage))
+	router.Method(http.MethodDelete, "/api/door-locks/{PartNumber}", locks.Delete(logger, locksStorage))
 	router.Method(http.MethodPost, "/api/accounts", accounts.Create(logger, accountsStorage))
 	router.Method(http.MethodDelete, "/api/accounts", accounts.Delete(logger, accountsStorage))
 

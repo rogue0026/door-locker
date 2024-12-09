@@ -11,7 +11,7 @@ func Popular(logger *logrus.Logger, locks LockFetcher) http.Handler {
 	h := func(w http.ResponseWriter, r *http.Request) {
 		recordsQuery := r.URL.Query().Get("records")
 		numOfRecords, err := strconv.ParseInt(recordsQuery, 10, 64)
-		if err != nil {
+		if err != nil || numOfRecords < 1 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
