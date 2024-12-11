@@ -9,6 +9,7 @@ import (
 	pgAccounts "github.com/rogue0026/door-locker/internal/storage/accounts/postgres"
 	pgLocks "github.com/rogue0026/door-locker/internal/storage/locks/postgres"
 	"github.com/rogue0026/door-locker/internal/transport/http/handlers/accounts"
+	"github.com/rogue0026/door-locker/internal/transport/http/handlers/images"
 	"github.com/rogue0026/door-locker/internal/transport/http/handlers/locks"
 	"github.com/rogue0026/door-locker/internal/transport/http/middleware"
 	"github.com/rogue0026/door-locker/pkg/logging"
@@ -45,6 +46,7 @@ func New(cfg config.AppConfig, connPool *pgxpool.Pool) (Application, error) {
 	router.Method(http.MethodDelete, "/api/door-locks/{PartNumber}", locks.Delete(logger, locksStorage))
 	router.Method(http.MethodPost, "/api/accounts", accounts.Create(logger, accountsStorage))
 	router.Method(http.MethodDelete, "/api/accounts", accounts.Delete(logger, accountsStorage))
+	router.Method(http.MethodGet, "/api/door-locks/images/{ImageName}", images.ImageByName(logger))
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.HTTPServerHost, cfg.HTTPServerPort),

@@ -95,6 +95,7 @@ func decodeImages(title string, images []string) ([]string, error) {
 			if err != nil {
 				return nil, fmt.Errorf("%w: %w", ErrDecodingImage, err)
 			}
+			title = strings.Replace(title, " ", "_", -1)
 			var filename = fmt.Sprintf("%d_%s.png", time.Now().UnixMilli(), title)
 			f, err := os.Create(fmt.Sprintf("./images/%s", filename))
 			if err != nil {

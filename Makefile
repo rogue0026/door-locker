@@ -1,15 +1,3 @@
-.PHONY build_app:
-build_app:
-	go build -o ./cmd/bin/application ./cmd/app/main.go
-
-.PHONY run_app:
-run_app:
-	./cmd/bin/application
-
-.PHONY clean_app:
-clean_app:
-	rm -rf ./cmd/bin/
-
 .PHONY build_migrator:
 build_migrator:
 	go build -o ./cmd/bin/migrator ./cmd/migrator/main.go
@@ -22,27 +10,21 @@ run_migrator:
 test_database:
 	docker run -d --name door_locker_database --network=application_network -e POSTGRES_DB=door_locks -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 postgres;
 
-.PHONY drop_test_database:
-drop_test_database:
-	docker stop test_db;
-	docker rm test_db;
-
-.PHONY all:
-all:
+.PHONY deploy_in_docker:
+deploy_in_docker:
 	docker network create application_network;
 	docker run -d --name door_locker_database --rm --network=application_network -e POSTGRES_DB=door_locks -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 postgres;
-	echo "Ждем развертывания базы данных";
 	sleep 3;
-	echo "Собираем мигратор и накатываем миграции на базу данных";
 	go build -o ./cmd/bin/migrator ./cmd/migrator/main.go;
 	./cmd/bin/migrator -direction up;
-	echo "Начинаем сборку образа backend-приложнения";
 	docker build -t backend:v0.0.1 .;
-	echo "Запускаем backend-приложение";
 	docker run --name backend_application --rm --network application_network --env-file ./configs/.env -p 9090:9090 backend:v0.0.1;
 
-.PHONY restart:
-restart:
-	docker stop door_locker_database;
-	docker network rm application_network;
-	make all;
+.PHONY deploy_local:
+deploy_local:
+	docker run -d --name door_locker_database --rm -e POSTGRES_DB=door_locks -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 postgres;
+	sleep 2;
+	go build -o ./cmd/bin/migrator ./cmd/migrator/main.go;
+	./cmd/bin/migrator -direction up;
+	go build -o ./cmd/bin/application ./cmd/app/main.go;
+	APP_ENVIRONMENT=development HTTP_SERVER_HOST=localhost HTTP_SERVER_PORT=9090 DB_HOST=localhost DB_PORT=5432 DB_USER=user DB_USER_PASSWORD=password DATABASE_NAME=door_locksAPP_ENVIRONMENT=development HTTP_SERVER_HOST=localhost HTTP_SERVER_PORT=9090 DB_HOST=localhost DB_PORT=5432 DB_USER=user DB_USER_PASSWORD=password DATABASE_NAME=door_locks ./cmd/bin/application;
