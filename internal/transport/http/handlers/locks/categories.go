@@ -21,6 +21,11 @@ func Categories(logger *logrus.Logger, locks CategoryFetcher) http.Handler {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		if len(categories) == 0 {
+			js, _ := json.MarshalIndent(map[string]interface{}{"error": "нет ни одной категории"}, "", "   ")
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = w.Write(js)
+		}
 		jsonData, err := json.MarshalIndent(&categories, "", "   ")
 		if err != nil {
 			logger.Error(err)

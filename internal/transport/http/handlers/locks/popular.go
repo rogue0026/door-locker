@@ -13,6 +13,8 @@ func Popular(logger *logrus.Logger, locks LockFetcher) http.Handler {
 		numOfRecords, err := strconv.ParseInt(recordsQuery, 10, 64)
 		if err != nil || numOfRecords < 1 {
 			w.WriteHeader(http.StatusBadRequest)
+			js, _ := json.Marshal(map[string]interface{}{"error": "укажите параметр records"})
+			_, _ = w.Write(js)
 			return
 		}
 		data, err := locks.LocksByRating(r.Context(), numOfRecords)

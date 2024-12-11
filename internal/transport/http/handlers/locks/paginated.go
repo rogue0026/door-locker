@@ -49,6 +49,8 @@ func Paginated(logger *logrus.Logger, fetcher LockFetcher) http.Handler {
 		}
 		if len(records) == 0 {
 			w.WriteHeader(http.StatusNotFound)
+			js, _ := json.Marshal(map[string]interface{}{"error": "нет ни одной записи"})
+			_, _ = w.Write(js)
 			return
 		}
 		jsonData, err := json.MarshalIndent(&records, "", "  ")
