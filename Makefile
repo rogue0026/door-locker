@@ -28,3 +28,10 @@ deploy_local:
 	./cmd/bin/migrator -direction up;
 	go build -o ./cmd/bin/application ./cmd/app/main.go;
 	APP_ENVIRONMENT=development HTTP_SERVER_HOST=localhost HTTP_SERVER_PORT=9090 DB_HOST=localhost DB_PORT=5432 DB_USER=user DB_USER_PASSWORD=password DATABASE_NAME=door_locksAPP_ENVIRONMENT=development HTTP_SERVER_HOST=localhost HTTP_SERVER_PORT=9090 DB_HOST=localhost DB_PORT=5432 DB_USER=user DB_USER_PASSWORD=password DATABASE_NAME=door_locks ./cmd/bin/application;
+
+.PHONY deploy_on_mac:
+deploy_on_mac:
+	docker run -d --name door_locker_database --rm -e POSTGRES_DB=door_locks -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -p 5432:5432 postgres;
+	sleep 2;
+	./cmd/bin/migrator -direction up;
+	APP_ENVIRONMENT=development HTTP_SERVER_HOST=localhost HTTP_SERVER_PORT=9090 DB_HOST=localhost DB_PORT=5432 DB_USER=user DB_USER_PASSWORD=password DATABASE_NAME=door_locksAPP_ENVIRONMENT=development HTTP_SERVER_HOST=localhost HTTP_SERVER_PORT=9090 DB_HOST=localhost DB_PORT=5432 DB_USER=user DB_USER_PASSWORD=password DATABASE_NAME=door_locks ./cmd/bin/application;
