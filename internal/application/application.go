@@ -14,7 +14,6 @@ import (
 	"github.com/rogue0026/door-locker/internal/transport/http/middleware"
 	"github.com/rogue0026/door-locker/pkg/logging"
 	"github.com/sirupsen/logrus"
-	"io"
 	"net/http"
 	"os"
 )
@@ -46,8 +45,7 @@ func New(cfg config.AppConfig, connPool *pgxpool.Pool) (Application, error) {
 	router.Method(http.MethodDelete, "/api/door-locks/{PartNumber}", locks.Delete(logger, locksStorage))
 	router.Method(http.MethodPost, "/api/accounts", accounts.Create(logger, accountsStorage))
 	router.Method(http.MethodDelete, "/api/accounts", accounts.Delete(logger, accountsStorage))
-	router.Method(http.MethodGet, "/api/door-locks/images/{ImageName}", images.ImageByName(logger))
-
+	router.Method(http.MethodGet, "/api/door-locks/images/*", http.StripPrefix("/api/door-locks/images/", images.ImageByName()))
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", cfg.HTTPServerHost, cfg.HTTPServerPort),
 		Handler: router,
@@ -69,36 +67,6 @@ func (a Application) Run() error {
 
 func (a Application) CloseDatabaseConnection() {
 	a.dbConnPool.Close()
-}
-
-func SetupLogger(appEnvironment string, logsOut io.Writer) *logrus.Logger {
-	var logger *logrus.Logger
-	switch appEnvironment {
-	case envDev:
-		logger = &logrus.Logger{
-			Out: logsOut,
-			Formatter: &logrus.JSONFormatter{
-				TimestampFormat: "02.01.2006 15:04:05",
-				PrettyPrint:     true,
-			},
-			ReportCaller: true,
-			Level:        logrus.DebugLevel,
-		}
-	case envProd:
-		logger = &logrus.Logger{
-			Out: logsOut,
-			Formatter: &logrus.JSONFormatter{
-				TimestampFormat: "02.01.2006 15:04:05",
-				PrettyPrint:     true,
-			},
-			ReportCaller: true,
-			Level:        logrus.InfoLevel,
-		}
-	}
-	if logger == nil {
-		panic("logger not initialized")
-	}
-	return logger
 }
 
 func NewConnectionPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
